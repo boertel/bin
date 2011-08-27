@@ -3,4 +3,4 @@
 # date: August 2011
 # description: Open all the conflict files on the same window
 
-mvim -p `git st | grep UU | cut -d " " -f 2`
+mvim -p `git st | grep "UU|AA" | cut -d " " -f 2`
