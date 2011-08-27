@@ -1,0 +1,125 @@
+#!/usr/bin/python
+
+import os
+import re
+import sys 
+import subprocess
+import getopt
+
+
+def print_help():
+    args = []
+    args.append({'key':'help', 'short':None, 'long':'help', 'description':'Show help', 'optional':True})
+    args.append({'key':'source', 'short':'s', 'long':'source', 'description':'CSS file that you want to inspect', 'optional':False})
+    args.append({'key':'directory', 'short':'d', 'long':'directory', 'description':'Define the directory where are the html and js files. (default: current directory)', 'optional':True})
+    args.append({'key':'start', 'short':None, 'long':'start', 'description':'Line number where to start (default: 1)', 'optional':True})
+    usage = 'usage: cleancss'
+    more = ''
+    for arg in args:
+        if arg['short'] is not None and arg['long'] is not None:
+            argument = '-%s|--%s' % (arg['short'], arg['long'])
+        elif arg['short'] is None and arg['long'] is not None:
+            argument = '--%s' % arg['long']
+        elif arg['short'] is not None and arg['long'] is None:
+            argument = '-%s' % arg['short']
+        else:
+            continue
+        if arg['optional']:
+            argument = '[%s]' % argument
+        usage += ' ' + argument
+        more += '\t%s : %s\n' % (argument.ljust(18), arg['description'])
+    print '%s\n%s' % (usage, more)
+
+def main(argv):
+    # default
+    start = 1
+    directory = '.'
+
+    try:
+        opts, args = getopt.getopt(argv, 's:d:', ['help','source', 'directory', 'start'])
+    except getopt.GetoptError:
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ('--help'):
+            print_help()
+            sys.exit()
+        elif opt in ('-s', '--source'):
+            source = arg
+        elif opt in ('-d', '--directory'):
+            directory = arg
+        elif opt in ('--start'):
+            start = int(arg)
+
+    search_in = directory
+
+    print('Searching for not used css properties in %s...' % source)
+    css = open(source)
+
+    # Format file: %s/{\_.\{-}}/\=substitute(submatch(0), '\n', '', 'g')/
+    # Deformat file: %s/{\_.\{-}}/\=substitute(submatch(0), '[{;]', '\0\r', 'g')/
+
+    i = 1
+    for line in css.readlines():
+        if i < start:
+            i += 1
+            continue
+        line= line.strip()
+        if line != '':
+            match = re.match('^(?P<key>.*)\{(?P<value>.*)\}', line)
+            if match is not None:
+                k = match.group('key').strip()
+                value = match.group('value')
+                keys = re.split(r'[, ]', k)
+                for key in keys:
+                    key = key.strip()
+                    better_short = re.match('[\w]*(?P<type>\.|\#)?(?P<short>[\w-]+[^:])[:.*]?', key)
+                    if better_short is not None:
+                        short = better_short.group('short')
+                        typ_brute = better_short.group('type') 
+                        if typ_brute  == '#':
+                            typ = 'id'
+                            better_search = 'id="%s"|#%s|(\'%s\')' % (short, short, short)
+                        elif typ_brute == '.':
+                            typ = 'class'
+                            better_search = 'class="%s"|.%s|(\'%s\')' % (short, short, short)
+                        else:
+                            typ = 'unknow'
+                            better_search = short
+                            continue
+                        print '[%s] %s | %s' % (i, short.ljust(45, ' '), k)
+                        os.system('echo "%s" | pbcopy -Prefer txt' % short)
+                        # --exclude=*.{less,css,swp,js}
+                        p = subprocess.Popen("grep -R -E '%s' --exclude=*.{css,swp} --include=*.{html,js} %s" % (better_search, search_in), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        out, err = p.communicate()
+                        if out == '':
+                            b = True
+                            while b:
+                                try:
+                                    print "delete (d) or info (i) or more (m) or cancel (enter) ?"
+                                    c = sys.stdin.read(1)
+                                    if c == 'd':
+                                        os.system("sed -i -E '%sd;' %s" % (i,filename))
+                                        i -=1
+                                        raw_input()
+                                        b = False
+                                    elif c == 'i':
+                                        print '%s\n' % line.replace('{', '{\n').replace(';',';\n')
+                                        raw_input()
+                                    else:
+                                        b = False
+                                except IOError: b = False 
+                        else:
+                            #print '%s' % out 
+                            #raw_input("Press ENTER to continue")
+                            pass
+                        print '-------------------------------------------------------------------------------------------------------'
+            else:
+                # Most of them are comments
+                #print 'No match for this line - %s' % line
+                pass
+        i += 1
+    css.close()
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

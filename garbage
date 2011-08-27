@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# author: Benjamin Oertel
+# date: August 2011
+# description: search for "garbage" code in a project
+
+# TODO do not grep if pattern is commented. 
+
+if [ -d $1 ]; then
+    grep -Rn -e 'print' -e 'console.log' $1
+else
+    echo "$1: No such directory"
+fi

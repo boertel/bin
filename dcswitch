@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# Author: Benjamin Oertel (benjamin.oertel@gmail.com)
+# Date: August 2011
+# Description: Switch between multiple dotcloud accounts
+
+# Initialize variables
+D_SWITCH=~/.dotcloud-switch/
+ORIGIN_DOTCLOUD=~/.dotcloud/
+
+# Functions
+function help()
+{
+    echo "Switch between multiple dotcloud accounts"
+    echo -e "  -s|--save <name>   : save the current dotcloud account under <name>"
+    echo -e "  -r|--remove <name> : remove <name> account"
+    echo -e "  -l|--list          : dotcloud accounts"
+    echo -e "  [-c|--current]     : current account"
+    echo -e "  <name>             : switch to <name> account"
+}
+
+function current()
+{
+    cat $D_SWITCH/current
+}
+
+function save()
+{
+    CURRENT="$D_SWITCH$1/"
+    if [ -d $D_SWITCH ]; then
+        cp -R $ORIGIN_DOTCLOUD $CURRENT
+        echo "Save current dotcloud account under the name: $1"
+    fi
+}
+
+function remove()
+{
+    echo "remove $1 account?(y/n)"
+    read c;
+    if [ $c = 'y' ]; then
+        rm -r $CURRENT
+    fi 
+}
+
+# TODO * to indicate the current account
+function list()
+{
+    echo "dotcloud accounts:"
+    ls -d $D_SWITCH*/
+}
+
+function switch()
+{
+    CURRENT="$D_SWITCH$1/"
+    if [ -d $CURRENT ]; then
+        cp -Rf $CURRENT $ORIGIN_DOTCLOUD
+        echo $1 > $D_SWITCH/current
+        echo "dotcloud account: $1"
+    else
+        echo "$1 is not a dotcloud account"
+    fi
+}
+
+
+# Main
+if [ $# -eq 2 ]; then
+    CURRENT="$D_SWITCH$2/"
+    # -o : OR
+    if [ $1 = "-s" -o $1 = "--save" ]; then
+        save $2
+    elif [ $1 = "-r" -o $1 = "--remove" ]; then
+        if [ -d $CURRENT ]; then
+            remove $2
+        else
+            echo "$2 is not a dotcloud account"
+        fi
+    fi
+fi
+
+if [ $# -eq 1 ]; then
+    # list of available dotcloud accounts 
+    if [ $1 = "-l" -o $1 = "--list" ]; then
+        list
+    # Display the current dotcloud account
+    elif [ $1 = "-c" -o $1 = "--current" ]; then
+        current
+    elif [ $1 = "-h" -o $1 = "--help" ]; then
+        help
+    else
+        switch $1
+    fi
+fi
+
+if [ $# -eq 0 ]; then
+    current
+fi

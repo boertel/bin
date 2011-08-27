@@ -1,0 +1,105 @@
+#!/usr/bin/python
+
+import os
+import re
+import sys 
+import subprocess
+import getopt
+
+def main(argv):
+    start = 1
+    output_file = False
+    props = None
+    limit = 1
+    try:
+        opts, args = getopt.getopt(argv, 's:fp:l:', ['help','source'])
+    except getopt.GetoptError:
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ('--help'):
+            sys.exit()
+        elif opt in ('-s', '--source'):
+            source = arg
+        elif opt in ('-f'):
+            output_file = True
+        elif opt in ('-p'):
+            props = arg.split(',')
+        elif opt in ('-l'):
+            limit = int(arg)
+
+    css = open(source)
+
+    interesting_properties = {}
+    if props is None:
+        interesting_properties.update({'background':None})
+        interesting_properties.update({'background-color':None})
+        #r_color = re.compile('\#([\w]*)')
+        interesting_properties.update({'color':None})
+        interesting_properties.update({'width':None})
+        interesting_properties.update({'height':None})
+        interesting_properties.update({'font-size':None})
+        interesting_properties.update({'border':None})
+        interesting_properties.update({'border-top':None})
+        interesting_properties.update({'border-bottom':None})
+        interesting_properties.update({'border-left':None})
+        interesting_properties.update({'border-right':None})
+        interesting_properties.update({'box-shadow':None})
+    else:
+        for p in props:
+            interesting_properties.update({p:None})
+
+    dictionary = {}
+    i = 1
+    lines = ''.join(css.readlines())
+    lines = lines.replace("'", '').replace('!important','').lower()
+    r_class = re.compile('([^/]*?){(.*?)}\n',re.MULTILINE|re.DOTALL)
+    r_properties = re.compile(r"[ ]*(.*?)\:[ ]*(.*?)\;")  
+    matches = r_class.findall(lines)
+    for match in matches:
+        key = match[0].strip()
+        values = r_properties.findall(match[1])
+        for value in values:
+            name = value[0].strip()
+            val = value[1].strip()
+            if name in interesting_properties:
+                r_extract = interesting_properties[name]
+                if r_extract is None:
+                    prop_key = val
+                else:
+                    m = r_extract.match(val)
+                    if m is not None:
+                        prop_key = m.group(1)
+                    else:
+                        print '[%s] Invalid regex: %s' % (name, val)
+                        prop_key = val
+                if name not in dictionary:
+                    dictionary.update({name:{}})
+                name_dict = dictionary[name]
+                if prop_key not in name_dict:
+                    name_dict.update({prop_key:[]})
+                dictionary[name][prop_key].append(key)
+
+    print 'Done. (Number of items analized: %s) <ENTER> to see the result' % len(matches)
+    if not output_file:
+        raw_input()
+    for k in dictionary:
+        print '> %s\n' % k
+        v = dictionary[k]
+        for k1 in v:
+            v1 = v[k1]
+            if len(v1) > limit:
+                print '%s' % (k1)
+                for i in v1:
+                    print '\t%s' % i
+                print '-------------------------------------------------------------------------------------'
+        print '> %s\n' % k
+        if not output_file:
+            raw_input()
+        print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+    css.close()
+
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

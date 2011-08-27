@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Author: Benjamin Oertel
+# Date: August 2011
+# Description: Rename files with regex
+
+for f in $(\ls | egrep -e '*')
+do
+    echo $f;
+done

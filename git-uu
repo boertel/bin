@@ -1,0 +1,6 @@
+#!/bin/bash
+# author: Benjamin Oertel
+# date: August 2011
+# description: Open all the conflict files on the same window
+
+mvim -p `git st | grep UU | cut -d " " -f 2`
