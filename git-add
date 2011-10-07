@@ -1,0 +1,3 @@
+#!/bin/bash
+
+git st | grep '??' | awk -F " " '{system("git add "$2)}'
