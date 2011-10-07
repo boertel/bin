@@ -17,7 +17,7 @@ Allow you to manage multiple dotcloud (http://www.dotcloud.com) accounts on the 
 Look for "garbage" code on your source code (like "print" in python or "console.log" in javascript).
 
 ### git-uu ###
-Open in MacVIm all the conflicted files (when using git)
+Open in MacVim all the conflicted files (when using git)
 
 ### Rename ###
 Suppose to rename files with a regex but it's still almost empty.
