@@ -1,0 +1,16 @@
+#!/bin/bash
+
+N=0
+for i in $(git branch | cut -d ' ' -f 2,3) ; do
+   
+      BRANCHES[$N]="$i"
+      echo "$N = $i"     #to confirm the entry
+       
+  let "N= $N + 1"
+done
+
+
+echo -n "Checkout to branch #: "
+read b
+
+git checkout ${BRANCHES[$b]}
