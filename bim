@@ -1,0 +1,9 @@
+#!/bin/bash
+
+FILE=~/.bim/$1
+if [ -f $FILE ]; then
+    pbcopy < $FILE
+    echo "$1 copy in your clipboard"
+else
+    echo "$FILE not found"
+fi
