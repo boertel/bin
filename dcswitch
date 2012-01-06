@@ -30,6 +30,9 @@ function save()
     if [ -d $D_SWITCH ]; then
         cp -R $ORIGIN_DOTCLOUD $CURRENT
         echo "Save current dotcloud account under the name: $1"
+    else
+        mkdir $D_SWITCH
+        save $1
     fi
 }
 
