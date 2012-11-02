@@ -30,30 +30,37 @@ def main(argv):
     found = False
     not_found = True
     last_user = False
+    ask_size = False
 
     index_found = 0
+    size = 0
 
     try:
-        opts, args = getopt.getopt(argv, 's:t:fu', ['source', 'target', 'force', 'not-found', 'found', 'user'])
+        opts, args = getopt.getopt(argv, 's:t:fu', ['source', 'target', 'force', 'not-found', 'found', 'user', 'size'])
     except getopt.GetoptError, e:
         print e
         sys.exit(2)
 
-    for opt, arg in opts:
-        if opt in ('-t', '--target'):
-            target = arg
-        elif opt in ('-s', '--source'):
-            source = arg
-        elif opt in ('-f', '--force'):
-            force = True
-        elif opt in ('--not-found',):
-            not_found = True
-            found = False
-        elif opt in ('--found',):
-            found = True
-            not_found = False
-        elif opt in ('-u', '--user'):
-            last_user = True
+    if len(argv) == 1:
+        source = argv[0]
+    else:
+        for opt, arg in opts:
+            if opt in ('-t', '--target'):
+                target = arg
+            elif opt in ('-s', '--source'):
+                source = arg
+            elif opt in ('-f', '--force'):
+                force = True
+            elif opt in ('--not-found',):
+                not_found = True
+                found = False
+            elif opt in ('--found',):
+                found = True
+                not_found = False
+            elif opt in ('-u', '--user'):
+                last_user = True
+            elif opt in ('--size'):
+                ask_size = True
 
 
     if source:
@@ -75,6 +82,8 @@ def main(argv):
             p = subprocess.Popen(grep, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             out, err = p.communicate()
             if out == '':           # Not found
+                if ask_size:
+                    size += os.path.getsize(absolute_path)
                 if not_found:
                     print log(relative_path, f, last_user)
                     if force:
@@ -91,6 +100,7 @@ def main(argv):
                         mv(full_path_to_file, trash)
 
 
+        print '---------------------------------------------------------------'
         message = 'total: %s' % len(files)
         if not_found:
             num = (len(files) - index_found)
@@ -98,7 +108,11 @@ def main(argv):
         else:
             num = index_found
             message += ' | found: %s' % num
-        print message + (' (%s%%)' % (num/len(files)))
+        
+        print message
+
+        if ask_size:
+            print 'bytes saved: %s' % size
                 
 if __name__ == "__main__":
     try:
