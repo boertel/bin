@@ -75,19 +75,22 @@ def main(argv):
             os.mkdir(trash)
 
         for f in files:
-            full_path_to_file = os.path.join(absolute_path, f)
+            absolute_file = os.path.join(absolute_path, f)
             relative_path = os.path.join(source, f)
+
+            if os.path.isdir(absolute_file):
+                continue
 
             grep = "git grep -n %s %s" % (f, target)
             p = subprocess.Popen(grep, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             out, err = p.communicate()
             if out == '':           # Not found
                 if ask_size:
-                    size += os.path.getsize(absolute_path)
+                    size += os.path.getsize(absolute_file)
                 if not_found:
                     print log(relative_path, f, last_user)
                     if force:
-                        mv(full_path_to_file, trash)
+                        mv(absolute_file, trash)
             else:
                 index_found += 1
                 if found:
@@ -97,7 +100,7 @@ def main(argv):
                     yon = raw_input('[Y/N]')
                     print yon
                     if yon == 'Y' or yon == 'y':
-                        mv(full_path_to_file, trash)
+                        mv(absolute_file, trash)
 
 
         print '---------------------------------------------------------------'
