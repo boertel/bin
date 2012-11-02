@@ -1,0 +1,104 @@
+#!/usr/bin/python
+
+import subprocess
+import sys 
+import getopt
+import os
+
+def mv(source, target):
+    mv = "mv %s %s " % (source, target)
+    p = subprocess.Popen(mv, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = p.communicate()
+
+def log(relative, f, last_user):
+    message = f
+    if last_user:
+        gitlg = "git log -1 --pretty=format:'%%h %%an %%cr %%s' --abbrev-commit -- %s" % relative
+        p = subprocess.Popen(gitlg, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        l, err = p.communicate()
+        if log != '':
+            message += '\t\t\t\t| %s' % l
+    return message
+
+
+
+def main(argv):
+    target = '.'
+    force = False
+    found = False
+    not_found = True
+    last_user = False
+
+    index_found = 0
+
+    try:
+        opts, args = getopt.getopt(argv, 's:t:fu', ['source', 'target', 'force', 'not-found', 'found', 'user'])
+    except getopt.GetoptError, e:
+        print e
+        sys.exit(2)
+
+    for opt, arg in opts:
+        if opt in ('-t', '--target'):
+            target = arg
+        elif opt in ('-s', '--source'):
+            source = arg
+        elif opt in ('-f', '--force'):
+            force = True
+        elif opt in ('--not-found',):
+            not_found = True
+            found = False
+        elif opt in ('--found',):
+            found = True
+            not_found = False
+        elif opt in ('-u', '--user'):
+            last_user = True
+
+
+    if source:
+        files = os.listdir(source)
+        if os.path.isabs(source):
+            absolute_path = source
+        else:
+            absolute_path = os.path.abspath(source)
+
+        trash = os.path.join(absolute_path, 'trash/')
+        if not os.path.exists(trash):
+            os.mkdir(trash)
+
+        for f in files:
+            full_path_to_file = os.path.join(absolute_path, f)
+            relative_path = os.path.join(source, f)
+
+            grep = "git grep -n %s %s" % (f, target)
+            p = subprocess.Popen(grep, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = p.communicate()
+            if out == '':           # Not found
+                if not_found:
+                    print log(relative_path, f, last_user)
+                    if force:
+                        mv(full_path_to_file, trash)
+            else:
+                index_found += 1
+                if found:
+                    print '---------------------------------------------------------------'
+                    print log(relative_path, f, last_user)
+                    print out
+                    yon = raw_input('[Y/N]')
+                    print yon
+                    if yon == 'Y' or yon == 'y':
+                        mv(full_path_to_file, trash)
+
+
+        message = 'total: %s' % len(files)
+        if not_found:
+            message += ' | not found: %s' % (len(files) - index_found)
+        else:
+            message += ' | found: %s' % (index_found)
+        print message
+                
+if __name__ == "__main__":
+    try:
+        main(sys.argv[1:])
+    except KeyboardInterrupt:
+        print '\nexit'
+        sys.exit(0)
