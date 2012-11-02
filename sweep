@@ -93,10 +93,12 @@ def main(argv):
 
         message = 'total: %s' % len(files)
         if not_found:
-            message += ' | not found: %s' % (len(files) - index_found)
+            num = (len(files) - index_found)
+            message += ' | not found: %s' % num
         else:
-            message += ' | found: %s' % (index_found)
-        print message
+            num = index_found
+            message += ' | found: %s' % num
+        print message + (' (%s%%)' % (num/len(files)))
                 
 if __name__ == "__main__":
     try:
