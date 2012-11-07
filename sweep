@@ -35,32 +35,36 @@ def main(argv):
     index_found = 0
     size = 0
 
+    if len(argv) >= 1:
+        source = argv[0]
+    else:
+        print 'At least 1 argument: source'
+        sys.exit(2)
+
     try:
-        opts, args = getopt.getopt(argv, 's:t:fu', ['source', 'target', 'force', 'not-found', 'found', 'user', 'size'])
+        opts, args = getopt.getopt(argv[1:], 's:t:fu', ['source', 'target', 'force', 'not-found', 'found', 'user', 'size'])
     except getopt.GetoptError, e:
         print e
         sys.exit(2)
 
-    if len(argv) == 1:
-        source = argv[0]
-    else:
-        for opt, arg in opts:
-            if opt in ('-t', '--target'):
-                target = arg
-            elif opt in ('-s', '--source'):
-                source = arg
-            elif opt in ('-f', '--force'):
-                force = True
-            elif opt in ('--not-found',):
-                not_found = True
-                found = False
-            elif opt in ('--found',):
-                found = True
-                not_found = False
-            elif opt in ('-u', '--user'):
-                last_user = True
-            elif opt in ('--size'):
-                ask_size = True
+
+    for opt, arg in opts:
+        if opt in ('-t', '--target'):
+            target = arg
+        elif opt in ('-s', '--source'):
+            source = arg
+        elif opt in ('-f', '--force'):
+            force = True
+        elif opt in ('--not-found',):
+            not_found = True
+            found = False
+        elif opt in ('--found',):
+            found = True
+            not_found = False
+        elif opt in ('-u', '--user'):
+            last_user = True
+        elif opt in ('--size'):
+            ask_size = True
 
 
     if source:
