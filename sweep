@@ -75,7 +75,7 @@ def main(argv):
             absolute_path = os.path.abspath(source)
 
         trash = os.path.join(absolute_path, 'trash/')
-        if not os.path.exists(trash):
+        if not os.path.exists(trash) and force:
             os.mkdir(trash)
 
         for f in files:
