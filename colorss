@@ -1,0 +1,10 @@
+#!/bin/bash
+
+EXTENSION=$1
+if [[ -z $EXTENSION ]]; then
+    EXTENSION="css"
+fi
+
+
+echo "hex,path,line"
+git grep -n ":\ \#" -- "*.$EXTENSION" | tr "[:upper:]" "[:lower:]" | sed -e "s/\(.*\)\.$EXTENSION:\([0-9]*\):.*\(#[[:alnum:]]*\).*/\3,\1.$EXTENSION,\2/g"
